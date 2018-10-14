@@ -1,0 +1,7 @@
+import numpy as np
+
+NUM_EXPERIMENTS = 100000
+NUM_COINS = 1000
+NUM_FLIPS_PER_COIN = 10
+
+for expIdx in range()
