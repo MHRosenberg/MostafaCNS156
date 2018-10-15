@@ -4,7 +4,7 @@ from numpy.linalg import pinv
 import matplotlib.pyplot as plt
 
 def trainPerceptron(X,Y,w):
-    H = h(X,w)
+    H = signActivation(X,w)
         
     ### get list of misclassified pts
     wrongInds = []
@@ -34,9 +34,9 @@ def getRandLineInR2(lowerLim, upperLim):
     mTarget, cTarget = np.linalg.lstsq(A, yTargets, rcond=None)[0]
 
     ### sanity check / debugging    
-#    plt.plot(xTargets, yTargets, 'o', label='random points', markersize=5)
-#    xs = np.linspace(-1,1,num=100)
-#    plt.plot(xs, mTarget*xs + cTarget, 'r', label='random hypothesis')
+    plt.plot(xTargets, yTargets, 'o', label='random points', markersize=5)
+    xs = np.linspace(-1,1,num=100)
+    plt.plot(xs, mTarget*xs + cTarget, 'r', label='random hypothesis')
     
     return mTarget, cTarget
     
@@ -64,13 +64,13 @@ def signActivation(X,w):
 #    Ein = sumSqrdError / NUM_PTS
 #    return Ein
     
-def getEin(h,Y):    
+def getError(h,y):    
     numCorrect = 0
     for ptInd in range(0,len(h)):
-        if h[ptInd] == Y[ptInd]:
+        if h[ptInd] == y[ptInd]:
             numCorrect += 1
-    Ein = 1.0 - (numCorrect/len(h))
-    return Ein
+    error = 1.0 - (numCorrect/len(h))
+    return error
 
 def runLinearRegression(X,y):
     w = np.full((3,),float(0)) ### w0 is for the bias
@@ -81,11 +81,11 @@ def runLinearRegression(X,y):
     X = X.T
     h = signActivation(X,w)
     
-    Ein = getEin(h,y)
-    return w, Ein
+    
+    return w, h 
 
 ### USER PARAMETERS
-NUM_RUNS = 100000 
+NUM_RUNS = 1000 
 NUM_PTS = 100
 #CONVERGENCE_THRESH = 0.999
 
@@ -93,9 +93,9 @@ Xin = np.random.uniform(low=-1,high=1, size=(3,NUM_PTS))
 Xin[0,:] = 1 
 
 ####### plot input data 
-#X = Xin
-#plt.figure()
-#plt.plot(X[1,:], X[2,:], 'o')
+X = Xin
+plt.figure()
+plt.plot(X[1,:], X[2,:], 'o')
 ### equivalent
 #plt.scatter(X[:,0], X[:,1])
 
@@ -103,6 +103,7 @@ numIterationsPerRun = []
 fBySlopeNintercept = []
 Gs = []
 Eins = []
+Eouts = []
 for runInd in range(0,NUM_RUNS):
     
     Xout = np.random.uniform(low=-1,high=1, size=(3,NUM_PTS))
@@ -110,29 +111,43 @@ for runInd in range(0,NUM_RUNS):
     
     ### correct output defined
     mTarget, cTarget = getRandLineInR2(-1,1)
-    fBySlopeNintercept.append([mTarget, cTarget])
-    y = getY(NUM_PTS, mTarget, cTarget, X)
+    yIn = getY(NUM_PTS, mTarget, cTarget, Xin)
+    yOut = getY(NUM_PTS, mTarget, cTarget, Xout)
     
-    w, Ein = runLinearRegression(X,y)
+    w, h = runLinearRegression(Xin,yIn)
+    
+    Ein = getError(h,yIn)
+    Eout = getError(h,yOut)
+    
+    print('Run: {2}; Ein: {1}; Eout: {3}\nw: {0};\n'.format(w, Ein, runInd, Eout))   
     
     ### sanity check plotting
-#    xs = np.linspace(-1,1,num=100)
-#    plt.plot(xs, w[1]*xs + w[0], 'g', label='linear regression')
+#    xs = [-1,1]
+#    ys = [(-w[0]+w[1])/w[2], (-w[0]-w[1])/w[2]] ############## WHY DOESN'T THIS WORK?!?!?!?!?!?!?!?
+#    plt.plot(xs, ys, 'g', label='linear regression')
 #    plt.xlim(-1,1)
 #    plt.ylim(-1,1)
 #    plt.legend()
+
+#    sys.exit('breaking loop via sys.exit') ######################################## FOR DEBUGGING ONLY!    
     
     ### saving results for later
-    print('Run: {2}; Ein: {1}\nw: {0};\n'.format(w, Ein, runInd))    
     Gs.append(w)
-    Eins.append(Ein)
+    fBySlopeNintercept.append([mTarget, cTarget])
+    Eins.append(float(Ein))
+    Eouts.append(float(Eout))
     
-    
-    
-avgEin = np.mean(Ein)
-print('avg Ein: {0}'.format(avgEin))
+    avgEin = np.mean(np.asarray(Ein))
+    avgEout = np.mean(Eout)
+    print('avg Ein: {0} avg Eout: {1}'.format(avgEin, avgEout))
 
-#sys.exit('breaking loop via sys.exit')
+avgEin = np.mean(Ein)
+avgEout = np.mean(Eout)
+print('avg Ein: {0} avg Eout: {1}'.format(avgEin, avgEout))
+
+
+
+
     
 
     
