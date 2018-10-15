@@ -3,13 +3,13 @@ import numpy as np
 from numpy.linalg import pinv
 import matplotlib.pyplot as plt
 
-def trainPerceptron(X,Y,w):
+def trainPerceptron(X,y,w):
     H = signActivation(X,w)
         
     ### get list of misclassified pts
     wrongInds = []
     for ptInd in range(1,len(H)):
-        if H[ptInd] != Y[ptInd]:
+        if H[ptInd] != y[ptInd]:
             wrongInds.append(ptInd)
     numWrongPts = len(wrongInds)
     
@@ -17,11 +17,11 @@ def trainPerceptron(X,Y,w):
     if wrongInds != []:
         randWrongPtInd = np.random.choice(wrongInds)
     
-    ### select random misclassified pt
-    xn = X[:,randWrongPtInd]
-    yn = Y[randWrongPtInd]
-    
-    w = np.add(w,yn*xn) ### train weights!
+        ### select random misclassified pt
+        xn = X[:,randWrongPtInd]
+        yn = y[randWrongPtInd]
+        
+        w = np.add(w,yn*xn) ### train weights!
     
     percentCorrect = (NUM_PTS-numWrongPts) / NUM_PTS
     return w, percentCorrect
@@ -87,7 +87,8 @@ def runLinearRegression(X,y):
 ### USER PARAMETERS
 NUM_RUNS = 1000 
 NUM_PTS = 100
-#CONVERGENCE_THRESH = 0.999
+RUN_PLA = 'no'
+CONVERGENCE_THRESH = 0.9999
 
 Xin = np.random.uniform(low=-1,high=1, size=(3,NUM_PTS))
 Xin[0,:] = 1 
@@ -131,45 +132,31 @@ for runInd in range(0,NUM_RUNS):
 
 #    sys.exit('breaking loop via sys.exit') ######################################## FOR DEBUGGING ONLY!    
     
+    if RUN_PLA.lower() == 'yes':
+        converged = False
+        iterationNum = 1
+        while not converged:
+            w, percentCorrect = trainPerceptron(X,yIn, w)
+            print('Run num: {2}; Iteration num: {0}; Ein: {1}\n'.format(iterationNum, Ein, runInd))
+            if percentCorrect > CONVERGENCE_THRESH:
+                converged = True 
+            iterationNum += 1
+        numIterationsPerRun.append(iterationNum)        
+    
     ### saving results for later
     Gs.append(w)
     fBySlopeNintercept.append([mTarget, cTarget])
     Eins.append(float(Ein))
     Eouts.append(float(Eout))
-    
-    avgEin = np.mean(np.asarray(Ein))
-    avgEout = np.mean(Eout)
-    print('avg Ein: {0} avg Eout: {1}'.format(avgEin, avgEout))
 
 avgEin = np.mean(Ein)
 avgEout = np.mean(Eout)
-print('avg Ein: {0} avg Eout: {1}'.format(avgEin, avgEout))
+if RUN_PLA.lower() == 'yes':
+    avgNumIterations = np.mean(numIterationsPerRun)
+    print('avg Ein: {0} avg Eout: {1}'.format(avgEin, avgEout))
+    print('{0} iterations required on avg to reach convergence'.format(avgNumIterations))
 
 
-
-
-    
-
-    
-
-#    
-#           
-#    converged = False
-#    iterationNum = 1
-#    while not converged:
-#        
-##        w = trainPerceptron(X,Y)
-#        
-#        print('Run num: {2}; Iteration num: {0}; Ein: {1}\n'.format(iterationNum, Ein, runInd))
-#        
-#        if percentCorrect > CONVERGENCE_THRESH:
-#            converged = True 
-#        iterationNum += 1
-#    numIterationsPerRun.append(iterationNum)
-#
-#    
-#avgNumIterations = np.mean(numIterationsPerRun)
-#print('{0} iterations required on avg to reach convergence'.format(avgNumIterations))
 #print('num pts: {0}; accuracy for convergence: {1}'.format(NUM_PTS,CONVERGENCE_THRESH))
         
         
